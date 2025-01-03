@@ -9,9 +9,8 @@
 #include <ctime>
 #include <cstdlib>
 #include <unordered_map>
-#include <random>
+#include <algorithm>
 #include "mylibrary.h"
-
 using namespace std;
 
 // Function to convert byte array to hex string
@@ -24,25 +23,19 @@ string bytesToHex(const vector<unsigned char>& bytes) {
 }
 
 // Function to generate a random chars salt of specified length
-string generateSalt(const int length = 13) {
-    const string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%&/()=?*,.-_@[]{}+";
-
-    random_device rd; // Seed
-    mt19937 generator(rd()); // Mersenne Twister RNG
-    std::uniform_int_distribution<> dis(0, charset.size() - 1); // Distribution range
-
-    string salt;
-    for (int i = 0; i < length; ++i) {
-        salt += charset[dis(generator)];
+string generateSalt(int length) {
+    vector<unsigned char> salt(length);
+    if (RAND_bytes(salt.data(), length) != 1) {
+        cerr << "Error generating random salt!" << endl;
+        exit(1);
     }
-
-    return salt;
+    return bytesToHex(salt);
 }
 
 // Function to hash password using SHA-256
-string hashPasswordWithSalt(const string& password, const string& salt, const string& username) {
+string hashPasswordWithSalt(const string& password, const string& salt) {
     vector<unsigned char> hash(SHA256_DIGEST_LENGTH);
-    const string salted_password = salt + password + username;
+    const string salted_password = password + salt;
 
     SHA256_CTX sha256_ctx;
     SHA256_Init(&sha256_ctx);
@@ -68,18 +61,30 @@ void registerUser(const string& prefilled_username) {
         cout << "Enter username: ";
         getline(cin, username);
 
+        // Check if username is taken
+        while (checkUsername(username)) {
+            // Prompt for new username
+            cout << "Username already exists. Please choose a different one." << endl;
+            cout << "Here are some suggestions: " << suggestUsername(username) << " | "
+                                        << suggestUsername(username) << " | "
+                                << suggestUsername(username) << endl; // Display random generated username suggestions
+            cout << "Enter username: ";
+            getline(cin, username);
+        }
+
         cout << "Enter password: ";
         getline(cin, password);
     }
 
     // Generate salt and hash the password
-    string salt = generateSalt();
-    string password_hash = hashPasswordWithSalt(password, salt, username);
+    string salt = generateSalt(16);
+    string password_hash = hashPasswordWithSalt(password, salt);
 
-    // Store the user info in credentials.dat
+    // Open credentials file to save new user info
     ofstream file(FILE_PATH_DIR, ios::app);
-    if (!file) {
-        cerr << "Unable to open file!" << endl;
+    // Check if the file is open
+    if (!file.is_open()) {
+        cerr << "Unable to open file!" << endl;  // Display error
         exit(1);
     }
 
@@ -89,16 +94,18 @@ void registerUser(const string& prefilled_username) {
     file.close();
 
     cout << "Proceed to login" << endl;
-    loginUser();
+    return;
 }
 
-// Function that check if username exist in credentials.dat file
+// Function that check if username exist in credentials file
 bool checkUsername(const string& username) {
     ifstream file(FILE_PATH_DIR);
-    if (!file) {
-        return false; // Credentials.dat file doesn't exist
+    // Check if file exists
+    if (!file.is_open()) {
+        return false;  // Return false value
     }
 
+    // If file exists check whether username exists
     string stored_username, stored_password_hash, stored_salt;
     while (file >> stored_username >> stored_password_hash >> stored_salt) {
         if (stored_username == username) {
@@ -106,6 +113,23 @@ bool checkUsername(const string& username) {
         }
     }
     return false; // Username not found
+}
+
+// Function that generates random available variation of taken username
+string suggestUsername(const string username) {
+    int valid = 0;  // Initialization of validation parameter
+    string newUsername;  // Initialize new username string
+
+    do {
+        // Generate new username that uses old one as a base
+        string usernameAddon = generateSalt(2);
+        transform(usernameAddon.begin(), usernameAddon.end(), usernameAddon.begin(), ::toupper);  // Capitalize entire generated string
+        newUsername = username + "_" + usernameAddon;  // Combining taken username and generated addon
+        if (!checkUsername(newUsername))  // Check if new username exists
+            valid = 1;
+    } while (valid == 0);
+
+    return newUsername;
 }
 
 // Function to check login credentials
@@ -118,11 +142,13 @@ void loginUser() {
     // Check if the username exists
     if (!checkUsername(username)) {
         string choice;
+        // Ask user to create new account
         do {
             cout << "Username not found! Would you like to register a new account? (y/n): " << endl;;
             getline(cin, choice);
         } while (!(choice == "Y" || choice == "y" || choice == "N" || choice == "n"));
 
+        // Ask user to use pre-filled username
         if (choice == "Y" || choice == "y") {
             string choice2;
             do {
@@ -130,19 +156,34 @@ void loginUser() {
                 getline(cin, choice2);
             } while (!(choice2 == "Y" || choice2 == "y" || choice2 == "N" || choice2 == "n"));
 
+            // Create new account with pre-filled username
             if (choice2 == "Y" || choice2 == "y") {
                 registerUser(username);
             }
+            // Prompt for new username
             else {
                 string newUsername;
                 cout << "Enter new username that you would like to use: ";
                 getline(cin, newUsername);
+
+                // Check if username is taken
+                while (checkUsername(newUsername)) {
+                    // Prompt for new username
+                    cout << "Username already exists. Please choose a different one." << endl;
+                    cout << "Here are some suggestions: " << suggestUsername(newUsername) << " | "
+                                                << suggestUsername(newUsername) << " | "
+                                        << suggestUsername(newUsername) << endl;  // Display random generated username suggestions
+                    cout << "Enter username: ";
+                    getline(cin, newUsername);
+                }
+
                 registerUser(newUsername);
             }
         }
         else {
-            cout << "Please try logging in again." << endl;
-            loginUser();
+            cout << "Please try to log in again." << endl;
+            cout << "Exiting to main menu..." << endl;
+            return;
         }
     }
 
@@ -151,26 +192,31 @@ void loginUser() {
     getline(cin, password);
 
     ifstream file(FILE_PATH_DIR);
-    if (!file) {
+    // Display error message if the file is not opened
+    if (!file.is_open()) {
         cerr << "Unable to open file!" << endl;
         exit(1);
     }
 
+    // Loop through credentials.dat file and check if password matches stored hashed password
     string stored_username, stored_password_hash, stored_salt;
     while (file >> stored_username >> stored_password_hash >> stored_salt) {
         if (stored_username == username) {
             // Hash the entered password with the stored salt
-            string entered_password_hash = hashPasswordWithSalt(password, stored_salt, username);
-            if (entered_password_hash == stored_password_hash) {
+            string entered_password_hash = hashPasswordWithSalt(password, stored_salt);
+            if (entered_password_hash == stored_password_hash) {  // Validity check for password
                 cout << "Logging in ..." << endl;
                 cout << "Login successful!" << endl;
+                // Check whether account used to log in is administrator or user
                 if (username == "admin") {
                     file.close();  // Close credentials file
                     adminMode(); // Enter Admin mode
+                    return;
                 }
                 else {
                     file.close();  // Close credentials file
                     userMode(); // Enter User mode
+                    return;
                 }
             }
             else {
