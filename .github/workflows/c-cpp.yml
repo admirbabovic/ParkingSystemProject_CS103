@@ -13,11 +13,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+    - name: install cmake
+      run: choco install cmake
+    - name: generate cmake
+      run: cmake . -G "Visual Studio 17 2022" -DOPENSSL_ROOT_DIR="./bin/windows"
+    - name: cmake build
+      run: cmake --build . --config Release
