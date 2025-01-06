@@ -1,4 +1,4 @@
-﻿# CMakeList.txt : CMake project for CS103_ParkingSystem, include source and define
+﻿# CMakeList.txt : CMake project for Group43_Project, include source and define
 # project specific logic here.
 #
 cmake_minimum_required (VERSION 3.8)
@@ -9,7 +9,7 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project ("CS103_ParkingSystem")
+project ("Group43_Project")
 
 # Set the file location
 set(FILE_PATH_DIR "${CMAKE_SOURCE_DIR}/credentials.dat")
@@ -26,14 +26,14 @@ link_directories(${CMAKE_SOURCE_DIR}/bin/windows)
 
 
 # Add source to this project's executable.
-add_executable (CS103_ParkingSystem "main.cpp" "mylibrary.cpp" "mylibrary.h")
+add_executable (Group43_Project "main.cpp" "mylibrary.cpp" "mylibrary.h")
 
-target_link_libraries(CS103_ParkingSystem PRIVATE
+target_link_libraries(Group43_Project PRIVATE
 						${CMAKE_SOURCE_DIR}/lib/libssl.lib
 						${CMAKE_SOURCE_DIR}/lib/libcrypto.lib)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET CS103_ParkingSystem PROPERTY CXX_STANDARD 20)
+  set_property(TARGET Group43_Project PROPERTY CXX_STANDARD 20)
 endif()
 
 # TODO: Add tests and install targets if needed.

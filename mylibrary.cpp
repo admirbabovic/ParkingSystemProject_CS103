@@ -101,7 +101,7 @@ void registerUser(const string& prefilled_username) {
 bool checkUsername(const string& username) {
     ifstream file(FILE_PATH_DIR);
     // Check if file exists
-    if (!file.is_open()) {
+    if (!file) {
         return false;  // Return false value
     }
 
@@ -228,20 +228,20 @@ void loginUser() {
 }
 
 struct ParkingSlots {
-    bool isOccupied{};   // Indicates whether the slot is occupied
-    string vehicleID;  // The ID of the vehicle parked in this slot
-    time_t entryTime{};  // The time the vehicle entered the parking slot
+    bool isOccupied{};   // Indicates whether the slot is taken
+    string vehicleID;  // The ID of the vehicle which is parked parked in this slot
+    time_t entryTime{};  // The time at which the vehicle entered the parking slot
 };
 
-vector<ParkingSlots> slots; // Vector to store parking slots
-unordered_map<string, int> vehicleMap; // Maps vehicle ID to slot number
-int totalSlots;            // Total number of parking slots
+vector<ParkingSlots> slots; // Vector for stroing parking slots
+unordered_map<string, int> vehicleMap; // It maps vehicle ID to a slot number
+int totalSlots;            // Total amount of parking slots
 double hourlyRate;         // Hourly parking rate
-double dailyRate = hourlyRate * 24 * 0.7 ;  // Daily parking rate
-double dailyRevenue = 0.0; // Revenue generated for the current day
-double weeklyRevenue = 0.0; // Revenue generated for the current week
-int dailyOccupancy = 0;    // Number of parking slots occupied today
-int weeklyOccupancy = 0;   // Number of parking slots occupied this week
+double dailyRate = hourlyRate * 24 * 0.7;  // Daily parking rate at a discount of 30%
+double dailyRevenue = 0.0; // The amount of revenue generated for the current day
+double weeklyRevenue = 0.0; // The amount of revenue generated this week
+int dailyOccupancy = 0;    // The amount of parking spaces taken today
+int weeklyOccupancy = 0;   // The amount of parking spaces taken this week
 
 void configureSlotsAndRates() {
     cout << "Enter the number of slots: ";
@@ -251,16 +251,16 @@ void configureSlotsAndRates() {
     cout << "Enter the daily rate: ";
     cin >> dailyRate;
 
-    // Resize the slots vector and initialize slot data
+    // Resizes the slots vector and initializes the data
     slots.resize(totalSlots);
     for (int i = 0; i < totalSlots; ++i) {
-        slots[i].isOccupied = false;  // Initially, all slots are unoccupied
-        slots[i].vehicleID = "";      // No vehicle is parked initially
+        slots[i].isOccupied = false;  // At the start, not parking spaces are taken
+        slots[i].vehicleID = "";      // No vehicle parked at the start
     }
-    cout << "Configuration updated.\n";
+    cout << "Configuration updated." << endl;
 }
 
-// Function to generate daily and weekly revenue reports
+// Function for generating daily and weekly revenue report
 void generateReports() {
     cout << "Daily Revenue: $" << fixed << setprecision(2) << dailyRevenue << endl;
     cout << "Daily Occupancy: " << dailyOccupancy << " / " << totalSlots << endl;
@@ -268,119 +268,119 @@ void generateReports() {
     cout << "Weekly Occupancy: " << weeklyOccupancy << endl;
 }
 
-// Admin mode function that provides options for configuration and reports
+// Function which allows the admin to configure the slots and generate a report
 void adminMode() {
     int choice;
     while (true) {
-        // Display admin menu
-        cout << "Welcome to admin dashboard!\nYou can choose to:\n";
-        cout << "1. Configure parking slots and rates\n";
-        cout << "2. Generate daily/weekly reports\n";
-        cout << "3. Exit admin dashboard\n"; // Option to exit Admin mode
+        // Displays the admin menu
+        cout << "Welcome to admin dashboard!\nYou can choose to:" << endl;
+        cout << "1. Configure parking slots and rates" << endl;
+        cout << "2. Generate daily/weekly reports" << endl;
+        cout << "3. Exit admin dashboard" << endl; // Leaves the admin mode
         cout << "Enter your choice: ";
         cin >> choice;
 
         switch (choice) {
         case 1:
-            configureSlotsAndRates(); // Call function to configure slots and rates
+            configureSlotsAndRates(); // Calls a function for configuring the amount of parking slots and fee rates 
             break;
         case 2:
-            generateReports(); // Call function to generate reports
+            generateReports(); // Calls a function to generate a report 
             break;
         case 3:
-            cout << "Exiting to the main menu...\n";
-            return; // Exit Admin mode and return to main menu
+            cout << "Exiting to the main menu..." << endl;
+            return; // Exists from admin menu and returns back to main menu
         default:
-            cout << "Invalid choice.\n";
+            cout << "Invalid choice." << endl;
         }
     }
 }
 
-// Function to check availability of parking slots
+// Function for checking all of the available parking slots
 void checkAvailability() {
     int availableSlots = 0;
     for (const auto& slot : slots) {
         if (!slot.isOccupied) {
-            ++availableSlots;  // Count the number of available slots
+            ++availableSlots;  // It checks and counts the amount of available parking slot
         }
     }
     cout << "Available slots: " << availableSlots << " / " << totalSlots << endl;
 
-    // Check if only one slot is left
+    // It checks if the is one slot left
     if (availableSlots == 1) {
-        cout << "Hurry up, parking is almost full!!!\n"; // Display warning message if only one slot is left
+        cout << "Hurry up, parking is almost full!!!" << endl; // Displays that the is only one parking space left
     }
 }
 
-// Function to park a vehicle in a specified slot
+// Function which parks a vehicle into a specific chosen parking slot
 void parkVehicle() {
     int slotNumber;
     string vehicleID;
     cout << "Enter the slot number where you want to park (1 - " << totalSlots << "): "; // Display slots from 1 to totalSlots
     cin >> slotNumber;
 
-    // Adjust slot number to 0-based index
+    // Adjust the slot number to counting from zero
     slotNumber -= 1;
 
     cout << "Enter vehicle ID: ";
     cin >> vehicleID;
 
-    // Check if the slot is valid and not already occupied
+    // Checks whether or not if a parking space is available or not
     if (slotNumber < 0 || slotNumber >= totalSlots) {
-        cout << "Invalid slot number!\n";
+        cout << "Invalid slot number!" << endl;
         return;
     }
     if (slots[slotNumber].isOccupied) {
-        cout << "Slot is already occupied!\n";
+        cout << "Slot is already occupied!" << endl;
         return;
     }
 
     // Park the vehicle
     slots[slotNumber].isOccupied = true;
     slots[slotNumber].vehicleID = vehicleID;
-    slots[slotNumber].entryTime = time(0); // Set the entry time to current time
+    slots[slotNumber].entryTime = time(0); // Set the entry time to the current time
     vehicleMap[vehicleID] = slotNumber;   // Map the vehicle ID to the slot number
-    ++dailyOccupancy;  // Increment daily occupancy
-    ++weeklyOccupancy; // Increment weekly occupancy
+    ++dailyOccupancy;  // Increases daily occupancy by 1
+    ++weeklyOccupancy; // Increases weekly occupancy by 1
 
-    cout << "Vehicle " << vehicleID << " parked in slot " << (slotNumber + 1) << ".\n";
+    cout << "Vehicle " << vehicleID << " parked in slot " << (slotNumber + 1) << "." << endl;
 }
 
-// Function to calculate fees for a vehicle based on the time spent in the parking lot
+// Function which calculates the fee for a vehicle being parked in a space depending on the time spent parking
 void calculateFees(const string& vehicleID) {
     if (vehicleMap.find(vehicleID) == vehicleMap.end()) {
-        cout << "Vehicle ID not found.\n";
+        cout << "Vehicle ID not found." << endl;
         return;
     }
 
     int slotNumber = vehicleMap[vehicleID];
     time_t currentTime = time(0);
-    double hoursSpent = difftime(currentTime, slots[slotNumber].entryTime) / 3600; // Calculate time spent in hours
-    double fee = hoursSpent * hourlyRate; // Calculate the fee
+    double hoursSpent = difftime(currentTime, slots[slotNumber].entryTime) / 3600; // Calculates the time spent in hours
+    double fee = hoursSpent * hourlyRate; // Calculates the fee
 
-    cout << "Time spent: " << fixed << setprecision(2) << hoursSpent << " hours\n";
+    cout << "Time spent: " << fixed << setprecision(2) << hoursSpent << " hours" << endl;
     cout << "Total fee: $" << fixed << setprecision(2) << fee << endl;
 }
 
-// Function to view charges and let the vehicle leave the parking lot
+// Function to the view charges and let the vehicle to leave the parking lot
 void viewChargesAndLeave(const string& vehicleID) {
     if (vehicleMap.find(vehicleID) == vehicleMap.end()) {
-        cout << "Vehicle ID not found.\n";
+        cout << "Vehicle ID not found." << endl;
         return;
     }
 
     int slotNumber = vehicleMap[vehicleID];
     time_t currentTime = time(0);
-    double hoursSpent = difftime(currentTime, slots[slotNumber].entryTime) / 3600; // Calculate time spent
-    double fee = hoursSpent * hourlyRate; // Calculate fee based on time spent
-    dailyRevenue += fee;  // Add fee to daily revenue
-    weeklyRevenue += fee; // Add fee to weekly revenue
+    double hoursSpent = difftime(currentTime, slots[slotNumber].entryTime) / 3600; // Calculate the amount of time spent
+    double fee = hoursSpent * hourlyRate; // Calculates fee based on time spent
+    dailyRevenue += fee;  // Adds fee to daily revenue
+    weeklyRevenue += fee; // Adds fee to weekly revenue
     slots[slotNumber].isOccupied = false;  // Mark slot as unoccupied
-    slots[slotNumber].vehicleID = "";      // Clear vehicle ID
-    vehicleMap.erase(vehicleID);           // Remove vehicle ID from map
+    slots[slotNumber].vehicleID = "";      // Cleans vehicle ID
+    vehicleMap.erase(vehicleID);           // Deletes vehicle ID from map
 
     cout << "Total fee for vehicle " << vehicleID << ": $" << fixed << setprecision(2) << fee << endl;
-    cout << "Vehicle " << vehicleID << " has left the parking lot.\n";
+    cout << "Vehicle " << vehicleID << " has left the parking lot." << endl;
 }
 
 // User mode function with options for parking and fee calculation
@@ -389,37 +389,37 @@ void userMode() {
     string vehicleID;
     while (true) {
         // Display user menu
-        cout << "Welcome to customer dashboard!\nYou have the ability to:\n";
-        cout << "1. Check real-time parking availability\n";
-        cout << "2. Park a vehicle\n";
-        cout << "3. Calculate fees based on time spent\n";
-        cout << "4. View charges and leave the parking lot\n";
-        cout << "5. Exit customer dashboard\n"; // Option to exit User mode
+        cout << "Welcome to customer dashboard!" << endl << "You have the ability to : " << endl;
+        cout << "1. Check real-time parking availability" << endl;
+        cout << "2. Park a vehicle" << endl;
+        cout << "3. Calculate fees based on time spent" << endl;
+        cout << "4. View charges and leave the parking lot" << endl;
+        cout << "5. Exit customer dashboard" << endl; // Option for leaving the user mode
         cout << "Enter your choice: ";
         cin >> choice;
 
         switch (choice) {
         case 1:
-            checkAvailability(); // Call function to check parking availability
+            checkAvailability(); // Calls a function which check if there are available parking spaces 
             break;
         case 2:
-            parkVehicle(); // Call function to park a vehicle
+            parkVehicle(); // Calls a funtion to park a vehicle
             break;
         case 3:
             cout << "Enter vehicle ID: ";
             cin >> vehicleID;
-            calculateFees(vehicleID); // Call function to calculate fees
+            calculateFees(vehicleID); // Calls a function for calculating the fees of parking
             break;
         case 4:
             cout << "Enter vehicle ID: ";
             cin >> vehicleID;
-            viewChargesAndLeave(vehicleID); // Call function to view charges and leave
+            viewChargesAndLeave(vehicleID); // Calls a function to view the charges and leave the parking lot
             break;
         case 5:
-            cout << "Exiting to the main menu...\n";
-            return; // Exit User mode and return to main menu
+            cout << "Exiting to the main menu..." << endl;
+            return; // Exist user mode and goes back to the main menu
         default:
-            cout << "Invalid choice.\n";
+            cout << "Invalid choice." << endl;
         }
     }
 }

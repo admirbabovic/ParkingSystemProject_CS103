@@ -5,10 +5,7 @@ using namespace std;
 
 /* Project name: ParkingSystem
  * Group: 43
- * Group members: Ibrahim Omerasevic, Admir Babovic, Ammar Obralic, Aldin Sokol, Imaad Omerovic
- * Short description: Parking system which allows users to login and/or register new user account.
- * After loggin in, users are displayed dashboard which consists of features such as:
- * checking available parking slots, parking their vehicle, checking current charges etc. 
+ * Group members: Ibrahim Omerasevic, Admir Babovic, Ammar Obralic, Aldin Sokol, Imaad Omerovic 
  */
 
 /* For testing purposes use these demo credentials or create new ones

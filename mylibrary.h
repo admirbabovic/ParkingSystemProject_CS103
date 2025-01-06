@@ -4,7 +4,7 @@
 #include <string>
 using namespace std;
 
-struct ParkingSlot;
+struct ParkingSlots;
 void configureSlotsAndRates();
 void generateReports();
 void adminMode();
